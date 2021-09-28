@@ -2,7 +2,10 @@ package com.example.demo1.Image
 
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.GetMapping
+import java.awt.BasicStroke
 import java.awt.Color
+import java.awt.Font
+import java.awt.Graphics
 import java.awt.image.BufferedImage
 import java.io.File
 import javax.imageio.ImageIO
@@ -24,23 +27,44 @@ class ImageController {
 //        ImageIO.write(bufferedReader, "jpg", file)
     }
 
-    fun createCanvas(width: Int = 640, height: Int = 480) {
+    fun createCanvas(width: Int = 640, height: Int = 480, agree: Float = .75F, disagree: Float = .25F) {
         val bufferedImage = BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
-        val g2d = bufferedImage.createGraphics()
-        g2d.background = Color.WHITE
-        g2d.fillRect(0, 0, width, height)
+        val graphic = bufferedImage.createGraphics()
+        graphic.background = Color.WHITE
+        graphic.fillRect(0, 0, width, height)
+        val currentFont: Font = graphic.font
+        val newFont = currentFont.deriveFont(currentFont.size * 1.4f)
+        graphic.font = newFont
 
-        g2d.color = Color.BLACK
+        graphic.color = Color.BLACK
         val summary = this.getSummary()
-        g2d.drawString(summary, 10, 10)
+        this.drawString(graphic, summary, 10, 20)
+        graphic.color = Color.GREEN
+        graphic.stroke = BasicStroke(10F)
 
+        graphic.drawLine(0, (0.75 * height).toInt(), (agree * width).toInt(), (0.75 * height).toInt())
+        graphic.color = Color.RED
+        graphic.drawLine((agree * width).toInt(), (0.75 * height).toInt(), width, (0.75 * height).toInt())
+        //draw percentage of agree and disagree here
+        val agreeCount = (100 * agree).toInt()
+        val disagreeCount = (100 * disagree).toInt()
 
+        graphic.drawString("$agreeCount | $disagreeCount", 0, (0.70 * height).toInt())
         val file = File("test1.jpg")
         ImageIO.write(bufferedImage, "jpg", file)
     }
 
     fun getSummary(): String {
-        return "lorem pixel of mega"
+        return "Lorem Ipsum is simply dummy text of the printing and typesetting industry. \n" +
+                "Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an\n" +
+                " unknown printer took a galley of type and scrambled it to make a type specimen book\n" +
+                ". It has survived not only five centuries, but also the leap into electronic typesetting\n"
     }
 
+    fun drawString(g: Graphics?, text: String?, x: Int, y: Int) {
+        var y = y
+
+        for (line in text!!.split("\n").toTypedArray())
+            g!!.drawString(line, x, g.fontMetrics.height.let { y += it; y })
+    }
 }
